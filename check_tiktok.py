@@ -22,10 +22,29 @@ def save_last_id(vid):
 def get_latest_video():
     url = "https://www.tikwm.com/api/user/posts"
     params = {"unique_id": TIKTOK_USERNAME, "count": 1}
-    r = requests.get(url, params=params, timeout=15)
-    data = r.json()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/122.0.0.0 Safari/537.36",
+        "Referer": "https://www.tikwm.com/",
+    }
+    r = requests.get(url, params=params, headers=headers, timeout=15)
+
+    if r.status_code != 200:
+        print(f"Bad status code: {r.status_code}")
+        print(f"Response text: {r.text[:500]}")
+        return None
+
+    try:
+        data = r.json()
+    except requests.exceptions.JSONDecodeError:
+        print("Response was not valid JSON. Raw response below:")
+        print(r.text[:500])
+        return None
+
     videos = data.get('data', {}).get('videos', [])
     if not videos:
+        print(f"No videos found in response: {data}")
         return None
     v = videos[0]
     return {
